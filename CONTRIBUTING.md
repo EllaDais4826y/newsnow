@@ -111,6 +111,8 @@ const hotVideo = defineSource(async () => {
 })
 
 // Helper function for formatting numbers
+// Note: Bilibili uses 万 (10,000) as the base unit, so we use 'w' as shorthand here.
+// Some may prefer '万' directly — change the return string below if needed.
 function formatNumber(num: number): string {
   if (num >= 10000) {
     return `${Math.floor(num / 10000)}w+`
@@ -126,6 +128,4 @@ export default defineSource({
 })
 ```
 
-For completely new sources, create a new file in `/server/sources/` named after your source (e.g., `newsource.ts`).
-
-> **Note (personal):** I've found it helpful to test new fetchers in isolation using `tsx` before wiring them into the full app — e.g., `npx tsx server/sources/mysource.ts` with a quick `console.log` at the bottom. Saves a lot of restart cycles.
+For completely new sources, create a new file in `/server/sources/` named after your source (e.g., `newsour`
