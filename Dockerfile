@@ -11,4 +11,7 @@ COPY --from=builder /usr/src/dist/output ./output
 # Default port changed to 3000 for local dev convenience
 ENV HOST=0.0.0.0 PORT=3000 NODE_ENV=production
 EXPOSE $PORT
+# Add tini as init process to handle signals properly
+RUN apk add --no-cache tini
+ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "output/server/index.mjs"]
