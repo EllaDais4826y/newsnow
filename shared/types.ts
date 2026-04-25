@@ -1,110 +1,98 @@
-import type { colors } from "unocss/preset-mini"
-import type { columns, fixedColumnIds } from "./metadata"
-import type { originSources } from "./pre-sources"
+/**
+ * Shared type definitions for NewsNow
+ * Used across both server and client code
+ */
 
-export type Color = "primary" | Exclude<keyof typeof colors, "current" | "inherit" | "transparent" | "black" | "white">
+/** Supported news source identifiers */
+export type SourceID =
+  | "hackernews"
+  | "producthunt"
+  | "github"
+  | "v2ex"
+  | "weibo"
+  | "zhihu"
+  | "bilibili"
+  | "douyin"
+  | "baidu"
+  | "sspai"
+  | "juejin"
+  | "36kr"
+  | "solidot"
+  | "oschina"
+  | "cnbeta"
+  | "ithome"
+  | "zaobao"
+  | "bloomberg"
+  | "wsj"
+  | "nytimes"
 
-type ConstSources = typeof originSources
-type MainSourceID = keyof(ConstSources)
-
-export type SourceID = {
-  [Key in MainSourceID]: ConstSources[Key] extends { disable?: true } ? never :
-    ConstSources[Key] extends { sub?: infer SubSource } ? {
-    // @ts-expect-error >_<
-      [SubKey in keyof SubSource]: SubSource[SubKey] extends { disable?: true } ? never : `${Key}-${SubKey}`
-    }[keyof SubSource] | Key : Key;
-}[MainSourceID]
-
-export type AllSourceID = {
-  [Key in MainSourceID]: ConstSources[Key] extends { sub?: infer SubSource } ? keyof {
-    // @ts-expect-error >_<
-    [SubKey in keyof SubSource as `${Key}-${SubKey}`]: never
-  } | Key : Key
-}[MainSourceID]
-
-// export type DisabledSourceID = Exclude<SourceID, MainSourceID>
-
-export type ColumnID = keyof typeof columns
-export type Metadata = Record<ColumnID, Column>
-
-export interface PrimitiveMetadata {
-  updatedTime: number
-  data: Record<FixedColumnID, SourceID[]>
-  action: "init" | "manual" | "sync"
-}
-
-export type FixedColumnID = (typeof fixedColumnIds)[number]
-export type HiddenColumnID = Exclude<ColumnID, FixedColumnID>
-
-export interface OriginSource extends Partial<Omit<Source, "name" | "redirect">> {
-  name: string
-  sub?: Record<string, {
-    /**
-     * Subtitle 小标题
-     */
-    title: string
-    // type?: "hottest" | "realtime"
-    // desc?: string
-    // column?: ManualColumnID
-    // color?: Color
-    // home?: string
-    // disable?: boolean
-    // interval?: number
-  } & Partial<Omit<Source, "title" | "name" | "redirect">>>
-}
-
-export interface Source {
-  name: string
-  /**
-   * 刷新的间隔时间
-   */
-  interval: number
-  color: Color
-
-  /**
-   * Subtitle 小标题
-   */
-  title?: string
-  desc?: string
-  /**
-   * Default normal timeline
-   */
-  type?: "hottest" | "realtime"
-  column?: HiddenColumnID
-  home?: string
-  /**
-   * @default false
-   */
-  disable?: boolean | "cf"
-  redirect?: SourceID
-}
-
-export interface Column {
-  name: string
-  sources: SourceID[]
-}
-
+/** A single news item returned from a source */
 export interface NewsItem {
-  id: string | number // unique
+  id: string
   title: string
   url: string
-  mobileUrl?: string
-  pubDate?: number | string
+  /** Extra info such as author, score, comment count */
   extra?: {
-    hover?: string
+    info?: string
+    icon?: string
     date?: number | string
-    info?: false | string
-    diff?: number
-    icon?: false | string | {
-      url: string
-      scale: number
-    }
   }
+  /** Mobile-specific URL if different from desktop */
+  mobileUrl?: string
 }
 
+/** Metadata describing a news source */
+export interface SourceInfo {
+  name: string
+  title: string
+  description?: string
+  type: "hottest" | "newest" | "tech" | "finance" | "social" | "international"
+  /** Language/region tag, e.g. "zh-CN", "en-US" */
+  language?: string
+  /** URL to the source's home page */
+  home?: string
+  /** Whether the source requires authentication to fetch */
+  requiresAuth?: boolean
+}
+
+/** API response wrapper for a news source */
 export interface SourceResponse {
-  status: "success" | "cache"
   id: SourceID
-  updatedTime: number | string
+  updatedTime: number
   items: NewsItem[]
+}
+
+/** Cache entry stored server-side */
+export interface CacheEntry {
+  items: NewsItem[]
+  /** Unix timestamp (ms) when this entry was fetched */
+  updatedTime: number
+}
+
+/** Query parameters accepted by the /api/s/:id endpoint */
+export interface FetchParams {
+  /** Force a cache refresh even if data is fresh */
+  force?: boolean
+}
+
+/** Column layout configuration for the UI */
+export interface ColumnConfig {
+  sourceId: SourceID
+  /** Display order within the grid */
+  order?: number
+}
+
+/** User preferences persisted in local storage */
+export interface UserPreferences {
+  columns: ColumnConfig[]
+  theme: "light" | "dark" | "system"
+  /** Interval in minutes between auto-refreshes (0 = disabled) */
+  refreshInterval: number
+}
+
+/** Utility: format a number for display (e.g. 1200 -> "1.2k") */
+export function formatNumber(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}m`
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`
+  return String(n)
 }
