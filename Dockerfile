@@ -12,6 +12,9 @@ COPY --from=builder /usr/src/dist/output ./output
 ENV HOST=0.0.0.0 PORT=3000 NODE_ENV=production
 EXPOSE $PORT
 # Add tini as init process to handle signals properly
-RUN apk add --no-cache tini
+# Install tini and curl (curl used for healthcheck)
+RUN apk add --no-cache tini curl
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:$PORT/ || exit 1
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "output/server/index.mjs"]
