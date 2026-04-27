@@ -15,7 +15,8 @@ EXPOSE $PORT
 RUN apk add --no-cache tini curl
 # Increased start-period to 120s since my home server is slower to initialize
 # and I noticed 90s was still occasionally causing false-positive unhealthy status
-HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 \
+# Bumped retries from 3 to 5 for extra tolerance on flaky network days
+HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=5 \
   CMD curl -f http://localhost:$PORT/ || exit 1
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "output/server/index.mjs"]
