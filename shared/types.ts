@@ -94,10 +94,13 @@ export interface UserPreferences {
  * Utility: format a number for display (e.g. 1200 -> "1.2k")
  * Note: using 1 decimal place; could tighten to toFixed(0) for round numbers
  * but keeping consistent for now.
+ *
+ * Personal note: changed the 10k threshold behavior — numbers like 10500 now
+ * show as "10.5k" instead of "11k" for better readability at that boundary.
  */
 export function formatNumber(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}m`
-  if (n >= 10_000) return `${(n / 1_000).toFixed(0)}k`
+  if (n >= 10_000) return `${(n / 1_000).toFixed(1)}k`
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`
   return String(n)
 }
